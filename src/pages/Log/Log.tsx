@@ -64,9 +64,9 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 let socket: LogSocket;
 
-const LogPage: React.FC = () => {
+const LogPage: React.FC<any> = (props) => {
   const classes = useStyles();
-
+  const status = props.location.state.status;
   const [log, setLog] = useState([]);
   const [response, setResponse] = useState("");
 
@@ -107,6 +107,7 @@ const LogPage: React.FC = () => {
           variant="contained"
           color="primary"
           onClick={executeTaskRequest}
+          disabled={status === '1'}
         >
           Execute
         </Button>

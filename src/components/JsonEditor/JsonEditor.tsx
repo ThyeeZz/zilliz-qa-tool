@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from "react";
 import { makeStyles, Theme } from "@material-ui/core/styles";
 import JSONEditor, { JSONEditorMode } from "jsoneditor";
 import "jsoneditor/dist/jsoneditor.min.css";
+import { InitJsonType } from "../../pages/TaskList/components/ModifyJsonDialog";
 
 const useStyles = makeStyles((theme: Theme) => ({
   container: {
@@ -12,7 +13,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 type PropsType = {
-  initJson: object;
+  initJson: InitJsonType | null;
   updateJson: React.Dispatch<React.SetStateAction<any>>;
 };
 
@@ -31,13 +32,15 @@ const JsonEditor: React.FC<PropsType> = (props) => {
       },
       mode: "code" as JSONEditorMode,
     };
-    editor = new JSONEditor(container.current, options);
-    editor.set(initJson);
+    if (initJson) {
+      editor = new JSONEditor(container.current, options);
+      editor.set(initJson);
+    }
 
     return () => {
       editor = null;
     };
-  }, [initJson, updateJson]);
+  }, [initJson]);
 
   return <div className={classes.container} ref={container}></div>;
 };

@@ -28,3 +28,4 @@ export const getTaskList = (): Promise<TaskListResponseI> => {
 export const executeTask = (id: string): Promise<ExecuteTaskI> => {
   return httpRequest.post("tasks/reschedule/" + id);
 };
+

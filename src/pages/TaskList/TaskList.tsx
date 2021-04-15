@@ -18,6 +18,8 @@ import { getTaskList, executeTask } from "../../utils/Api";
 import { ListItemType } from "../../types/index";
 import JsonContext from "../../context/jsonContext";
 import Moment from "moment";
+import ModifyJsonDialog from "./components/ModifyJsonDialog";
+import ExecuteResultDialog from "./components/ExecuteResultDialog";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -64,7 +66,7 @@ const useStyles = makeStyles((theme: Theme) => ({
 }));
 
 type StatusOptions = {
-  [key: number]: string;
+  [key: string]: string;
 };
 
 const TaskList: React.FC = () => {
@@ -74,8 +76,23 @@ const TaskList: React.FC = () => {
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [open, setOpen] = useState("");
-  const [content, setContent] = useState({});
+  const [openType, setOpenType] = useState({
+    open: false,
+    type: "modify",
+  });
+  const [content, setContent] = useState({
+    action: "",
+    row: {},
+  });
+  const [writing, setWriting] = useState({
+    title: "Title",
+    btn: "Save",
+  });
+  const [result, setResult] = useState({
+    code: 0,
+    data: {},
+    msg: "",
+  });
   const [rows, setRows] = useState<ListItemType[]>([]);
   const statusOptions: StatusOptions = {
     0: "已创建",
@@ -97,36 +114,61 @@ const TaskList: React.FC = () => {
     setPage(0);
   };
   const handleClose = () => {
-    setOpen("");
+    setOpenType({
+      open: false,
+      type: "",
+    });
   };
 
   const handleGetDetail = async (row: ListItemType) => {
     const { _id } = row;
-    history.push(`/log/${_id}`);
+    history.push({ pathname: `/log/${_id}`, state: { status: row.status } });
   };
 
   const executeTaskRequest = async (row: ListItemType) => {
     const { _id } = row;
     try {
-      const { code,msg,data } = await executeTask(_id);
-      if (code === 200) {
-        openSnackbar("success", JSON.stringify({code,data,msg}));
-      }else{
-        openSnackbar("error", JSON.stringify({code,data,msg}));
-
-      }
+      const { code, msg, data } = await executeTask(_id);
+      setResult({ code, data, msg });
     } catch (error) {
       console.log(error);
+    } finally {
+      getListRequest();
+      setWriting({
+        title: "Execute Result",
+        btn: "",
+      });
+      setOpenType({
+        open: true,
+        type: "notify",
+      });
     }
   };
 
-  const handleEditTask = (val: string, row: ListItemType) => {
-    setContent(row);
-    setOpen(val);
-  };
-  const handleCreateTask = (val: string, {}) => {
-    setContent({});
-    setOpen(val);
+  const hanldeCreateOrEditTask = (action: string, row: object) => {
+    if (action === "edit") {
+      setContent({
+        action: "edit",
+        row,
+      });
+      setWriting({
+        title: "Edit Task",
+        btn: "Update",
+      });
+    } else {
+      setContent({
+        action: "create",
+        row: {},
+      });
+      setWriting({
+        title: "Create Task",
+        btn: "Save",
+      });
+    }
+    setOpenType({
+      open: true,
+      type: "modify",
+    });
   };
 
   const getListRequest = async () => {
@@ -172,7 +214,7 @@ const TaskList: React.FC = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => handleCreateTask("Create", {})}
+          onClick={() => hanldeCreateOrEditTask("create", {})}
         >
           Create Task
         </Button>
@@ -210,7 +252,8 @@ const TaskList: React.FC = () => {
                       <>
                         <Button
                           color="primary"
-                          onClick={() => handleEditTask("Edit", row)}
+                          onClick={() => hanldeCreateOrEditTask("edit", row)}
+                          disabled={row.status === "1"}
                         >
                           Edit
                         </Button>
@@ -222,6 +265,7 @@ const TaskList: React.FC = () => {
                         </Button>
                         <Button
                           color="primary"
+                          disabled={row.status === "1"}
                           onClick={() => executeTaskRequest(row)}
                         >
                           Execute
@@ -251,13 +295,23 @@ const TaskList: React.FC = () => {
           ActionsComponent={TablePaginationActions}
         />
       </div>
-
       <CustomDialog
-        open={open}
+        open={openType.open}
         handleClose={handleClose}
-        content={content}
-        getListRequest={getListRequest}
-      />
+        writing={writing}
+      >
+        {openType.type === "notify" ? (
+          <ExecuteResultDialog {...result} />
+        ) : openType.type === "modify" ? (
+          <ModifyJsonDialog
+            handleClose={handleClose}
+            content={content}
+            getListRequest={getListRequest}
+          />
+        ) : (
+          ""
+        )}
+      </CustomDialog>
     </section>
   );
 };

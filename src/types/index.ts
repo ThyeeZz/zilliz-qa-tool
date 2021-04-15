@@ -11,7 +11,7 @@ export type ListItemType = {
   _cls: string;
   created_time?: string;
   description: string | null;
-  status: number;
+  status: string;
   statusCn?:string;
 };
 

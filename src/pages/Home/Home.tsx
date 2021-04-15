@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
   const handleCloseSnack = () => {
     setConfig({
       open: false,
-      type: "success",
+      type: "",
       alert: "",
     });
   };
