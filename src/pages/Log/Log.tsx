@@ -17,6 +17,7 @@ const useStyles = makeStyles((theme: Theme) => ({
       fontSize: "22px",
       lineHeight: "30px",
       fontWeight: "bold",
+      marginBottom: theme.spacing(3)
     },
   },
   titleBar: {
@@ -44,17 +45,17 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   log: {
     flex: 1,
-    maxHeight: "400px",
     padding: theme.spacing(2, 2),
     border: "1px solid #eee",
     boxShadow: "5px 5px 10px #eee",
-    "& .log": {
+    "& .log-wrapper": {
       fontSize: "16px",
       lineHeight: "24px",
       padding: theme.spacing(2, 0),
       overflow: "auto",
       display: "flex",
       flexDirection: "column",
+      maxHeight: "400px",
       "& span": {
         padding: theme.spacing(0.5, 0),
       },
@@ -67,13 +68,13 @@ let socket: LogSocket;
 const LogPage: React.FC<any> = (props) => {
   const classes = useStyles();
   const status = props.location.state.status;
-  const [log, setLog] = useState([]);
+  const [log, setLog] = useState<string[]>([]);
   const [response, setResponse] = useState("");
 
   const { id } = useParams<{ id: string }>();
 
   const updateLog = (data: any) => {
-    setLog(log.concat(data));
+    setLog((log) => log.concat(data));
   };
 
   const executeTaskRequest = async () => {
@@ -95,7 +96,9 @@ const LogPage: React.FC<any> = (props) => {
     socket = new LogSocket(id, updateLog);
 
     return () => {
-      socket.onclose();
+      if (socket) {
+        socket.onclose();
+      }
     };
   }, [id]);
 
@@ -107,7 +110,7 @@ const LogPage: React.FC<any> = (props) => {
           variant="contained"
           color="primary"
           onClick={executeTaskRequest}
-          disabled={status === '1'}
+          disabled={status === "1"}
         >
           Execute
         </Button>
@@ -118,7 +121,7 @@ const LogPage: React.FC<any> = (props) => {
       </div>
       <div className={classes.log}>
         <p className="title">log</p>
-        <p className="log">
+        <p className="log-wrapper">
           {log.map((item, index) => {
             return <span key={index}>{item}</span>;
           })}

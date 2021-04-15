@@ -16,9 +16,10 @@ class LogSocket {
   };
   onopen = (evt: any) => {
     console.log("connection open");
-    // this.ws.send("Hello WebSockets!");
+    this.ws.send("Hello WebSockets!");
   };
   onmessage = (evt: any) => {
+    console.log(evt.data)
     this.onmessageCb(evt.data);
   };
   onclose = () => {

@@ -4,7 +4,6 @@ import { makeStyles, Theme } from "@material-ui/core/styles";
 import JsonEditor from "../../../components/JsonEditor";
 import JsonContext from "../../../context/jsonContext";
 import { createTask, updateTask } from "../../../utils/Api";
-import { ListItemType } from "../../../types";
 
 const useStyles = makeStyles((theme: Theme) => ({
   dialogWrapper: {
@@ -47,7 +46,7 @@ const ModifyJsonDialog: React.FC<PropsType> = (props) => {
 
   useEffect(() => {
     setInitJson({ name, env_mode, env_params, suite });
-  }, [content]);
+  }, [name, env_mode, env_params, suite]);
 
   const handleSave = async () => {
     if (action === "create") {

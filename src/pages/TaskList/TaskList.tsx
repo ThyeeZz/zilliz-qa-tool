@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { makeStyles, Theme } from "@material-ui/core/styles";
 import { useHistory } from "react-router-dom";
 import {
@@ -16,10 +16,11 @@ import TablePaginationActions from "../../components/TablePaginationActions";
 import CustomDialog from "../../components/CustomDialog/indext";
 import { getTaskList, executeTask } from "../../utils/Api";
 import { ListItemType } from "../../types/index";
-import JsonContext from "../../context/jsonContext";
 import Moment from "moment";
 import ModifyJsonDialog from "./components/ModifyJsonDialog";
 import ExecuteResultDialog from "./components/ExecuteResultDialog";
+import EnhancedTableHead from "./components/EnhancedTableHead";
+import { SubscriptionsOutlined } from "@material-ui/icons";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -68,11 +69,17 @@ const useStyles = makeStyles((theme: Theme) => ({
 type StatusOptions = {
   [key: string]: string;
 };
+// interface Data {
+//   calories: number;
+//   carbs: number;
+//   fat: number;
+//   name: string;
+//   protein: number;
+// }
 
 const TaskList: React.FC = () => {
   const classes = useStyles();
   const history = useHistory();
-  const { openSnackbar } = useContext(JsonContext);
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -95,9 +102,49 @@ const TaskList: React.FC = () => {
   });
   const [rows, setRows] = useState<ListItemType[]>([]);
   const statusOptions: StatusOptions = {
-    0: "已创建",
-    1: "执行中",
-    2: "执行完成",
+    0: "NEW",
+    1: "RUNING",
+    2: "EXECUTED",
+  };
+  const [order, setOrder] = React.useState<"asc" | "desc">("asc");
+  const [orderBy, setOrderBy] = React.useState("created_time");
+
+  const handleRequestSort = (
+    event: React.MouseEvent<unknown>,
+    property: any
+  ) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+    if (property === "created_time") {
+      if (order === "desc") {
+        rows.sort(
+          (x, y) =>
+            new Date(y.created_time!).getTime() -
+            new Date(x.created_time!).getTime()
+        );
+      } else {
+        rows.sort(
+          (x, y) =>
+            new Date(x.created_time!).getTime() -
+            new Date(y.created_time!).getTime()
+        );
+      }
+    } else if (property === "last_executed_time") {
+      if (order === "desc") {
+        rows.sort(
+          (x, y) =>
+            new Date(y.last_executed_time!).getTime() -
+            new Date(x.last_executed_time!).getTime()
+        );
+      } else {
+        rows.sort(
+          (x, y) =>
+            new Date(x.last_executed_time!).getTime() -
+            new Date(y.last_executed_time!).getTime()
+        );
+      }
+    }
   };
 
   // const emptyRows =
@@ -174,13 +221,11 @@ const TaskList: React.FC = () => {
   const getListRequest = async () => {
     try {
       const { data } = await getTaskList();
-      if (data.length > 1) {
-        data.sort(
-          (x, y) =>
-            new Date(y.created_time!).getTime() -
-            new Date(x.created_time!).getTime()
-        );
-      }
+      data.sort(
+        (x, y) =>
+          new Date(y.created_time!).getTime() -
+          new Date(x.created_time!).getTime()
+      );
       setRows(
         data.map((item) => {
           let { last_executed_time, created_time, status } = item;
@@ -201,9 +246,7 @@ const TaskList: React.FC = () => {
     getListRequest();
     const timer = setInterval(getListRequest, 60000);
     return () => {
-      if (timer) {
-        clearInterval(timer);
-      }
+      clearInterval(timer);
     };
   }, []);
 
@@ -222,15 +265,11 @@ const TaskList: React.FC = () => {
       <div className="bg-gray">
         <TableContainer component={Paper} className={classes.tableContainer}>
           <Table className={classes.table} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell align="center">Name</TableCell>
-                <TableCell align="center">Create time</TableCell>
-                <TableCell align="center">Last execute time</TableCell>
-                <TableCell align="center">Status</TableCell>
-                <TableCell align="center">Options</TableCell>
-              </TableRow>
-            </TableHead>
+            <EnhancedTableHead
+              order={order}
+              orderBy={orderBy}
+              onRequestSort={handleRequestSort}
+            />
             <TableBody>
               {(rowsPerPage > 0
                 ? rows.slice(
@@ -243,7 +282,9 @@ const TaskList: React.FC = () => {
                   <TableCell align="center">{row.name}</TableCell>
                   <TableCell align="center">{row.created_time || ""}</TableCell>
                   <TableCell align="center">{row.last_executed_time}</TableCell>
-                  <TableCell align="center">{row.statusCn || "未知"}</TableCell>
+                  <TableCell align="center">
+                    {row.statusCn || "UNKNOWN"}
+                  </TableCell>
 
                   <TableCell
                     scope="row"

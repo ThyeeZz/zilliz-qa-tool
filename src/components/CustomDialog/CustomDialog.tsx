@@ -1,10 +1,7 @@
-import React, { useState, useContext, useEffect, ReactNode } from "react";
-import { Dialog, Button } from "@material-ui/core";
+import React from "react";
+import { Dialog } from "@material-ui/core";
 import { makeStyles, Theme } from "@material-ui/core/styles";
 import CloseIcon from "@material-ui/icons/Close";
-import JsonEditor from "../JsonEditor";
-import JsonContext from "../../context/jsonContext";
-import { createTask, updateTask } from "../../utils/Api";
 
 const useStyles = makeStyles((theme: Theme) => ({
   titleBar: {
