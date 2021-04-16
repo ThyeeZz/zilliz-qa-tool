@@ -19,6 +19,9 @@ const useStyles = makeStyles((theme: Theme) => ({
     top: 20,
     width: 1,
   },
+  headCell:{
+    minWidth: '200px'
+  }
 }));
 
 type Data = {
@@ -87,7 +90,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
     onRequestSort(event, property);
   };
 
-  const orderByList = ["created_time", "last_executed_time"];
+  const orderByList = ["created_time", "last_executed_time","name","status"];
 
   return (
     <TableHead>
@@ -98,6 +101,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             align={headCell.numeric ? "right" : "center"}
             padding={headCell.disablePadding ? "none" : "default"}
             sortDirection={orderBy === headCell.id ? order : false}
+            className={classes.headCell}
           >
             {orderByList.includes(headCell.id) ? (
               <TableSortLabel

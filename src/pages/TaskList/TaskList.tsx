@@ -20,7 +20,7 @@ import Moment from "moment";
 import ModifyJsonDialog from "./components/ModifyJsonDialog";
 import ExecuteResultDialog from "./components/ExecuteResultDialog";
 import EnhancedTableHead from "./components/EnhancedTableHead";
-import { SubscriptionsOutlined } from "@material-ui/icons";
+import { customSort } from "../../utils/tools";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -102,9 +102,10 @@ const TaskList: React.FC = () => {
   });
   const [rows, setRows] = useState<ListItemType[]>([]);
   const statusOptions: StatusOptions = {
-    0: "NEW",
-    1: "RUNING",
-    2: "EXECUTED",
+    "0": "NEW",
+    "1": "RUNING",
+    "2": "EXECUTED",
+    "-1": "UNKNOWN",
   };
   const [order, setOrder] = React.useState<"asc" | "desc">("asc");
   const [orderBy, setOrderBy] = React.useState("created_time");
@@ -113,37 +114,55 @@ const TaskList: React.FC = () => {
     event: React.MouseEvent<unknown>,
     property: any
   ) => {
-    const isAsc = orderBy === property && order === "asc";
-    setOrder(isAsc ? "desc" : "asc");
+    let isAsc;
+    if (orderBy === property) {
+      setOrder(order === "asc" ? "desc" : "asc");
+      isAsc = order === "asc" ? "desc" : "asc";
+    } else {
+      setOrder("asc");
+      isAsc = "asc";
+    }
     setOrderBy(property);
-    if (property === "created_time") {
-      if (order === "desc") {
-        rows.sort(
-          (x, y) =>
-            new Date(y.created_time!).getTime() -
-            new Date(x.created_time!).getTime()
-        );
-      } else {
-        rows.sort(
-          (x, y) =>
-            new Date(x.created_time!).getTime() -
-            new Date(y.created_time!).getTime()
-        );
+
+    switch (property) {
+      case "name": {
+        customSort({
+          arr: rows,
+          key: "name",
+          keyType: "string",
+          isAsc,
+        });
+        return;
       }
-    } else if (property === "last_executed_time") {
-      if (order === "desc") {
-        rows.sort(
-          (x, y) =>
-            new Date(y.last_executed_time!).getTime() -
-            new Date(x.last_executed_time!).getTime()
-        );
-      } else {
-        rows.sort(
-          (x, y) =>
-            new Date(x.last_executed_time!).getTime() -
-            new Date(y.last_executed_time!).getTime()
-        );
+      case "created_time": {
+        customSort({
+          arr: rows,
+          key: "created_time",
+          keyType: "date",
+          isAsc,
+        });
+        return;
       }
+      case "last_executed_time": {
+        customSort({
+          arr: rows,
+          key: "last_executed_time",
+          keyType: "date",
+          isAsc,
+        });
+        return;
+      }
+      case "status": {
+        customSort({
+          arr: rows,
+          key: "status",
+          keyType: "number",
+          isAsc,
+        });
+        return;
+      }
+      default:
+        return;
     }
   };
 
@@ -221,11 +240,11 @@ const TaskList: React.FC = () => {
   const getListRequest = async () => {
     try {
       const { data } = await getTaskList();
-      data.sort(
-        (x, y) =>
-          new Date(y.created_time!).getTime() -
-          new Date(x.created_time!).getTime()
-      );
+      // data.sort(
+      //   (x, y) =>
+      //     new Date(y.created_time!).getTime() -
+      //     new Date(x.created_time!).getTime()
+      // );
       setRows(
         data.map((item) => {
           let { last_executed_time, created_time, status } = item;
@@ -233,8 +252,9 @@ const TaskList: React.FC = () => {
           last_executed_time = Moment(last_executed_time).format(
             "YYYY-MM-DD HH:mm"
           );
+          status = status || "-1";
           const statusCn = statusOptions[status];
-          return { ...item, last_executed_time, created_time, statusCn };
+          return { ...item, last_executed_time, created_time, statusCn,status };
         })
       );
     } catch (error) {
@@ -282,9 +302,7 @@ const TaskList: React.FC = () => {
                   <TableCell align="center">{row.name}</TableCell>
                   <TableCell align="center">{row.created_time || ""}</TableCell>
                   <TableCell align="center">{row.last_executed_time}</TableCell>
-                  <TableCell align="center">
-                    {row.statusCn || "UNKNOWN"}
-                  </TableCell>
+                  <TableCell align="center">{row.statusCn}</TableCell>
 
                   <TableCell
                     scope="row"
